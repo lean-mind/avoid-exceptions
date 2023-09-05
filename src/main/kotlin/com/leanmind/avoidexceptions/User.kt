@@ -1,12 +1,12 @@
 package com.leanmind.avoidexceptions
 
 data class User private constructor(
-    var username: String,
-    var password: String,
-    var role: UserRole
+        var username: String,
+        var password: String,
+        var role: UserRole
 ) {
     companion object {
-        fun from(username: String, password: String, role: UserRole): User {
+        fun from(username: String, password: String, role: UserRole = UserRole.STANDARD): User {
             if (username.isBlank() || password.isBlank()) {
                 throw EmptyDataNotAllowedException()
             }
