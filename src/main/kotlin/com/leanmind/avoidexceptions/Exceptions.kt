@@ -1,11 +1,22 @@
 package com.leanmind.avoidexceptions
 
-class UserAlreadyExistsException : RuntimeException()
+class UserAlreadyExistsException : RuntimeException(
+    "User already exists."
+)
 
-class EmptyDataNotAllowedException : RuntimeException()
+class EmptyDataNotAllowedException : RuntimeException(
+    "User data is invalid."
+)
 
-class CannotCreateUserException(exception: Exception) : RuntimeException(exception)
+class CannotCreateUserException(exception: Exception) : RuntimeException(
+    "Cannot create user.",
+    exception
+)
 
-class PasswordTooShortException : RuntimeException()
+class PasswordTooShortException : RuntimeException(
+    "Password is too short."
+)
 
-class TooManyAdminsException : RuntimeException()
+class TooManyAdminsException : RuntimeException(
+    "Too many admins."
+)

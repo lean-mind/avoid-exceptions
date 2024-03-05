@@ -1,16 +1,19 @@
 package com.leanmind.avoidexceptions
 
-data class User(
+data class User private constructor(
     var username: String,
     var password: String,
-    var role: UserRole = UserRole.STANDARD
+    var role: UserRole
 ) {
-    init {
-        if (username.isEmpty() || password.isEmpty()) {
-            throw EmptyDataNotAllowedException()
-        }
-        if (password.length < 8) {
-            throw PasswordTooShortException()
+    companion object {
+        fun from(username: String, password: String, role: UserRole): User {
+            if (username.isBlank() || password.isBlank()) {
+                throw EmptyDataNotAllowedException()
+            }
+            if (password.length < 8) {
+                throw PasswordTooShortException()
+            }
+            return User(username, password, role)
         }
     }
 }
