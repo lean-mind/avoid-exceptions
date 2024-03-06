@@ -20,3 +20,8 @@ class PasswordTooShortException : RuntimeException(
 class TooManyAdminsException : RuntimeException(
     "Too many admins."
 )
+
+class CannotPersistUserException(cause: Exception) : RuntimeException(
+    "Cannot persist user.",
+    cause
+)

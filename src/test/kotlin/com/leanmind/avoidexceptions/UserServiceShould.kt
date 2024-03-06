@@ -25,7 +25,6 @@ class UserServiceShould {
     @Test
     fun `create user when it's valid`() {
         val user = User.from("username", "password", UserRole.STANDARD)
-        `when`(userRepository.findByUsername(user.username)).thenReturn(null)
 
         userService.create(user)
 
@@ -33,19 +32,8 @@ class UserServiceShould {
     }
 
     @Test
-    fun `fails creating user if it already exists`() {
-        val user = User.from("existingUser", "password", UserRole.STANDARD)
-        `when`(userRepository.findByUsername(user.username)).thenReturn(user)
-
-        assertThrows<UserAlreadyExistsException> {
-            userService.create(user)
-        }
-    }
-
-    @Test
     fun `fails creating user if it cannot be saved`() {
         val user = User.from("username", "password", UserRole.STANDARD)
-        `when`(userRepository.findByUsername(user.username)).thenReturn(null)
         `when`(userRepository.save(user)).thenThrow(RuntimeException())
 
         assertThrows<CannotCreateUserException> {
@@ -56,11 +44,12 @@ class UserServiceShould {
     @Test
     fun `fails creating user if maximum number of admin is reached`() {
         val user = User.from("username", "password", UserRole.ADMIN)
-        `when`(userRepository.findByUsername(user.username)).thenReturn(null)
         `when`(userRepository.countOfAdmins()).thenReturn(2)
 
-        assertThrows<TooManyAdminsException> {
+        assertThrows<CannotCreateUserException> {
             userService.create(user)
+        }.let { exception ->
+            assert(exception.cause is TooManyAdminsException)
         }
     }
 }
