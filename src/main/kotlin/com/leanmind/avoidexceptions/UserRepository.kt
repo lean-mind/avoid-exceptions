@@ -4,15 +4,27 @@ import org.springframework.stereotype.Service
 
 @Service
 class UserRepository {
-    fun findByUsername(username: String): User? {
-        TODO("Not yet implemented")
+    private val users = mutableListOf<User>()
+
+    fun exists(user: User): Boolean {
+        return users.find { it.username == user.username } !== null
     }
 
-    fun save(user: User) {
-        TODO("Not yet implemented")
+    fun findByUsername(username: String): User? {
+        return users.find { it.username == username }
+    }
+
+    fun save(user: User): CreateUserResult {
+        try {
+            users.add(user)
+            return CreateUserResult.success()
+        } catch (exception: Exception) {
+            return CreateUserResult.cannotSaveUser()
+        }
+
     }
 
     fun countOfAdmins(): Int {
-        TODO("Not yet implemented")
+        return users.count { it.role == UserRole.ADMIN }
     }
 }

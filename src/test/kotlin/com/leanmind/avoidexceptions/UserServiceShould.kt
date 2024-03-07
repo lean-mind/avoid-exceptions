@@ -1,5 +1,6 @@
 package com.leanmind.avoidexceptions
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,28 +25,30 @@ class UserServiceShould {
 
     @Test
     fun `create user when it's valid`() {
-        val user = User("username", "password")
-        `when`(userRepository.findByUsername(user.username)).thenReturn(null)
+        val user = User.from("username", "password", UserRole.STANDARD)
+        `when`(userRepository.exists(User.from("username", "password", UserRole.STANDARD))).thenReturn(false)
 
-        userService.create(user)
+        val createUserResult = userService.create(user)
 
         verify(userRepository).save(user)
+        assertThat(createUserResult.isSuccess()).isTrue()
     }
 
     @Test
     fun `fails creating user if it already exists`() {
-        val user = User("existingUser", "password")
-        `when`(userRepository.findByUsername(user.username)).thenReturn(user)
+        val user = User.from("existingUser", "password", UserRole.STANDARD)
+        `when`(userRepository.exists(User.from("existingUser", "password", UserRole.STANDARD))).thenReturn(true)
 
-        assertThrows<UserAlreadyExistsException> {
-            userService.create(user)
-        }
+        val createUserResult = userService.create(user)
+
+        assertThat(createUserResult.isSuccess()).isFalse()
+        assertThat(createUserResult.error).isInstanceOf(UserAlreadyExistsError::class.java)
     }
 
     @Test
     fun `fails creating user if it cannot be saved`() {
-        val user = User("username", "password")
-        `when`(userRepository.findByUsername(user.username)).thenReturn(null)
+        val user = User.from("username", "password", UserRole.STANDARD)
+        `when`(userRepository.exists(User.from("username", "password", UserRole.STANDARD))).thenReturn(false)
         `when`(userRepository.save(user)).thenThrow(RuntimeException())
 
         assertThrows<CannotCreateUserException> {
@@ -55,12 +58,13 @@ class UserServiceShould {
 
     @Test
     fun `fails creating user if maximum number of admin is reached`() {
-        val user = User("username", "password", UserRole.ADMIN)
-        `when`(userRepository.findByUsername(user.username)).thenReturn(null)
+        val user = User.from("username", "password", UserRole.ADMIN)
+        `when`(userRepository.exists(User.from("username", "password", UserRole.ADMIN))).thenReturn(false)
         `when`(userRepository.countOfAdmins()).thenReturn(2)
 
-        assertThrows<TooManyAdminsException> {
-            userService.create(user)
-        }
+        val createUserResult = userService.create(user)
+
+        assertThat(createUserResult.isSuccess()).isFalse()
+        assertThat(createUserResult.error).isInstanceOf(TooManyAdminsError::class.java)
     }
 }

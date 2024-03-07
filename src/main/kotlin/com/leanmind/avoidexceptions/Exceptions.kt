@@ -9,3 +9,8 @@ class CannotCreateUserException(exception: Exception) : RuntimeException(excepti
 class PasswordTooShortException : RuntimeException()
 
 class TooManyAdminsException : RuntimeException()
+
+class CannotPersistUserException(cause: Exception) : RuntimeException(
+        "Cannot persist user.",
+        cause
+)

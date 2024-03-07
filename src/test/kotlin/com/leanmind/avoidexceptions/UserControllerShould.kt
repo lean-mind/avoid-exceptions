@@ -22,12 +22,13 @@ class UserControllerShould {
 
     @Test
     fun `respond is created when user has been created`() {
-        val user = User("username", "password")
+        val user = User.from("username", "password", UserRole.STANDARD)
+        `when`(userService.create(user)).thenReturn(CreateUserResult.success())
 
         mockMvc.perform(
             post("/users")
                 .contentType(APPLICATION_JSON)
-                .content("{\"username\":\"${user.username}\",\"password\":\"${user.password}\"}")
+                .content(buildRequestBodyFrom(user.username, user.password, user.role.toString()))
         ).andExpect(status().isCreated)
         verify(userService).create(user)
     }
@@ -37,7 +38,7 @@ class UserControllerShould {
         mockMvc.perform(
             post("/users")
                 .contentType(APPLICATION_JSON)
-                .content("{\"username\":\"\",\"password\":\"\"}")
+                .content(buildRequestBodyFrom("", "", ""))
         ).andExpect(status().isBadRequest)
     }
 
@@ -47,43 +48,56 @@ class UserControllerShould {
         mockMvc.perform(
             post("/users")
                 .contentType(APPLICATION_JSON)
-                .content("{\"username\":\"username\",\"password\":\"pwd\"}")
+                .content(buildRequestBodyFrom("username", "pwd", UserRole.STANDARD.toString()))
         ).andExpect(status().isBadRequest)
     }
 
     @Test
     fun `respond bad request when user already exists`() {
-        val user = User("existingUser", "password")
+        val user = User.from("existingUser", "password", UserRole.STANDARD)
         `when`(userService.create(user)).thenThrow(UserAlreadyExistsException())
 
         mockMvc.perform(
             post("/users")
                 .contentType(APPLICATION_JSON)
-                .content("{\"username\":\"${user.username}\",\"password\":\"${user.password}\"}")
+                .content(buildRequestBodyFrom(user.username, user.password, user.role.toString()))
         ).andExpect(status().isBadRequest)
     }
 
     @Test
     fun `respond bad request when max number of admins is reached`() {
-        val user = User("username", "password", UserRole.ADMIN)
+        val user = User.from("username", "password", UserRole.ADMIN)
         `when`(userService.create(user)).thenThrow(TooManyAdminsException())
 
         mockMvc.perform(
             post("/users")
                 .contentType(APPLICATION_JSON)
-                .content("{\"username\":\"${user.username}\",\"password\":\"${user.password}\",\"role\":\"${user.role}\"}")
+                .content(buildRequestBodyFrom(user.username, user.password, user.role.toString()))
         ).andExpect(status().isBadRequest)
     }
 
     @Test
     fun `respond internal server error when something fails creating the user`() {
-        val user = User("username", "password")
+        val user = User.from("username", "password", UserRole.STANDARD)
         `when`(userService.create(user)).thenThrow(CannotCreateUserException(RuntimeException()))
 
         mockMvc.perform(
             post("/users")
                 .contentType(APPLICATION_JSON)
-                .content("{\"username\":\"${user.username}\",\"password\":\"${user.password}\"}")
+                .content(buildRequestBodyFrom(user.username, user.password, user.role.toString()))
         ).andExpect(status().isInternalServerError)
     }
+
+    private fun buildRequestBodyFrom(
+            username: String,
+            password: String,
+            role: String
+    ) =
+            """
+            {
+                "username": "$username",
+                "password": "$password",
+                "role": "$role"
+            }
+        """.trimIndent()
 }
